@@ -21,9 +21,9 @@ class MountLoadMetaData:
         elif version < MountLoadMetaData.metaDataVersion:
             self._upgradeDB(version)
 
-    def addPath(self, dirname, basename, type, size, mode, atime, mtime, isSynced):
+    def addPath(self, dirname, basename, pathType, size, mode, atime, mtime, isSynced):
         c = self.conn.cursor()
-        c.execute('INSERT INTO path (dirname, basename, type, size, mode, atime, mtime, isSynced) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', (dirname, basename, type, size, mode, atime, mtime, isSynced))
+        c.execute('INSERT INTO path (dirname, basename, type, size, mode, atime, mtime, isSynced) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', (dirname, basename, pathType, size, mode, atime, mtime, isSynced))
         return c.lastrowid
 
     def addRemoteSegment(self, pathId, begin, end):

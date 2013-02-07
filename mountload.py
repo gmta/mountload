@@ -11,7 +11,6 @@ from mountload.source import MountLoadSource
 from mountload.target import MountLoadTarget
 from os import getgid, getuid
 from sys import argv
-from time import time
 
 class MountLoad(LoggingMixIn, Operations):
     def __init__(self, sourceURI, targetDirectory):
@@ -238,10 +237,10 @@ class MountLoadFUSE(LoggingMixIn, Operations):
         return self.mountload.readData(path, offset, size)
 
     def readdir(self, path, fh):
-        list = ['.', '..']
+        entries = ['.', '..']
         for entry in self.mountload.getEntriesInDirectory(path):
-            list.append(entry['basename'])
-        return list
+            entries.append(entry['basename'])
+        return entries
 
     def readlink(self, path):
         return self.mountload.getSymlinkTarget(path)

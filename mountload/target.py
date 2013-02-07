@@ -1,6 +1,6 @@
 import os
 
-from os.path import abspath, isdir, isfile
+from os.path import abspath, isdir
 
 class MountLoadTarget:
     def __init__(self, targetDirectory):
