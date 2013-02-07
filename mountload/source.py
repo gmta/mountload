@@ -26,7 +26,13 @@ class MountLoadSource:
         self.sftp = self.client.open_sftp()
         self.sftp.chdir(self.remoteDirectory)
 
+        # Keep track of the last opened file
+        self.lofFP = None
+        self.lofPath = None
+
     def close(self):
+        if self.lofFP:
+            self.lofFP.close()
         self.sftp.close()
         self.client.close()
 
@@ -37,7 +43,7 @@ class MountLoadSource:
         try:
             stat = self.sftp.stat(self.remoteDirectory + path)
         except IOError as e:
-            if e.errno == ENOENT:   
+            if e.errno == ENOENT:
                 return None
             raise
         return stat
@@ -46,8 +52,15 @@ class MountLoadSource:
         return self.sftp.readlink(self.remoteDirectory + path)
 
     def readData(self, path, offset, size):
-        f = self.sftp.open(self.remoteDirectory + path, 'r')
-        f.seek(offset, 0)
-        data = f.read(size)
-        f.close()
-        return data
+        # Open the file if not already open
+        if self.lofPath != path:
+            if self.lofFP:
+                self.lofFP.close()
+            self.lofFP = self.sftp.open(self.remoteDirectory + path, 'r')
+            self.lofPath = path
+
+        # Perform prefetched reads
+        datalist = []
+        for datachunk in self.lofFP.readv([(offset, size)]):
+            datalist.append(datachunk)
+        return ''.join(datalist)
