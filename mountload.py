@@ -4,32 +4,36 @@ import logging
 import os.path
 import stat
 
+from argparse import ArgumentParser
 from errno import ENOENT
 from fuse import FUSE, FuseOSError, Operations, LoggingMixIn
 from mountload.metadata import MountLoadMetaData
 from mountload.source import MountLoadSource
 from mountload.target import MountLoadTarget
 from os import getgid, getuid
-from sys import argv
 
 class MountLoad(LoggingMixIn, Operations):
-    def __init__(self, sourceURI, targetDirectory):
+    def __init__(self, sourceURI, targetDirectory, askPassword):
         self.gid = getgid()
         self.uid = getuid()
 
-        # Init source, target and metadata
-        self.source = MountLoadSource(sourceURI)
+        # Initialise target and metadata
         self.target = MountLoadTarget(targetDirectory)
         self.metadata = MountLoadMetaData(self.target.getDBPath())
 
         # Store and check source URI
         knownSourceURI = self.metadata.getConfigString('sourceURI')
-        if knownSourceURI is None:
+        if sourceURI is None:
+            sourceURI = knownSourceURI
+        elif knownSourceURI is None:
             self.metadata.setConfig('sourceURI', sourceURI)
         elif knownSourceURI != sourceURI:
-            raise RuntimeError('Invalid source URI for this metadata')
+            raise RuntimeError('Given source URI differs from known source URI')
 
-        # Initialize root directory
+        # Initialise source
+        self.source = MountLoadSource(sourceURI, askPassword)
+
+        # Bootstrap the remote root
         self.metadata.begin()
         if self._getPath('/') is None:
             self._registerPath('/', self.source.getEntry('/'))
@@ -89,12 +93,12 @@ class MountLoad(LoggingMixIn, Operations):
         # If no path was found, recursively check parent directory for sync
         if (pathInfo is None) and (path != '/'):
             parentDirInfo = self._getPath(os.path.dirname(path))
-            if parentDirInfo is None:   # Parent directory doesn't exist, so this path can't exist either
+            if parentDirInfo is None:  # Parent directory doesn't exist, so this path can't exist either
                 return None
-            if parentDirInfo['isSynced']:   # Parent directory says it's synced, so our failure to retrieve the path was valid
+            if parentDirInfo['isSynced']:  # Parent directory says it's synced, so our failure to retrieve the path was valid
                 return None
             entry = self.source.getEntry(path)
-            if entry is None:   # We checked with the source, but this path really doesn't exist
+            if entry is None:  # We checked with the source, but this path really doesn't exist
                 return None
             self._registerPath(path, entry)
             pathInfo = self.metadata.getPath(dirname, basename)
@@ -182,7 +186,7 @@ class MountLoad(LoggingMixIn, Operations):
         dirname, basename = MountLoad._splitPath(os.path.normpath(path))
         self.metadata.addPath(dirname, basename, 'directory', entry.st_size, entry.st_mode, entry.st_atime, entry.st_mtime, 0)
 
-        self.target.createDirectory(path, entry.st_mode | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)   # Mode u+rwx
+        self.target.createDirectory(path, entry.st_mode | stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)  # Mode u+rwx
 
     def _registerPathFile(self, path, entry):
         dirname, basename = MountLoad._splitPath(os.path.normpath(path))
@@ -195,7 +199,7 @@ class MountLoad(LoggingMixIn, Operations):
             self.metadata.addRemoteSegment(pathId, 0, size - 1)
         self.metadata.commit()
 
-        self.target.createFile(path, entry.st_mode | stat.S_IRUSR | stat.S_IWUSR)   # Mode u+rw
+        self.target.createFile(path, entry.st_mode | stat.S_IRUSR | stat.S_IWUSR)  # Mode u+rw
 
     def _registerPathSymlink(self, path, entry):
         target = self.source.getLinkTarget(path)
@@ -247,20 +251,22 @@ class MountLoadFUSE(LoggingMixIn, Operations):
 
 # Main method
 if __name__ == '__main__':
-    if len(argv) != 4:
-        print("Usage: %s <source> <target> <mountpoint>" % argv[0])
-        print("Arguments:")
-        print("\tsource:\t\tsftp://user@host[:port]/path/to/source/directory")
-        print("\ttarget:\t\t/path/to/target/directory")
-        print("\tmountpoint:\t/path/to/mount/directory")
-        
-        exit(1)
+    # Parse the command line arguments
+    parser = ArgumentParser(description='Mountload mounts a remote directory using SFTP while also downloading it to another target directory.')
+    parser.add_argument('--password', action='store_true', help="Ask for an SSH password")
+    parser.add_argument('source', help="The SFTP source URI, eg: sftp://user@example.org/path/to/remote/dir", nargs='?')
+    parser.add_argument('target', help="The directory in which all the files should be stored")
+    parser.add_argument('mountpoint', help="Path to the mountpoint")
+    args = parser.parse_args()
 
-    source = argv[1]
-    target = argv[2]
-    mountpoint = argv[3]
+    # Determine options
+    askPassword = args.password
+    source = args.source
+    target = args.target
+    mountpoint = args.mountpoint
 
-    ml = MountLoad(source, target)
+    # Run mountload
+    ml = MountLoad(source, target, askPassword)
     mlf = MountLoadFUSE(ml)
     fuse = FUSE(mlf, mountpoint, foreground=True, nothreads=True)
     exit(0)

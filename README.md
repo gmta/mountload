@@ -12,20 +12,24 @@ requirements
 - python 2.7.3+
 - python-paramiko 1.7.7+
 
-example
-=======
+examples
+========
+To mount a remote directory:
 
     ./mountload sftp://user@example.org/path/to/remote/directory /path/to/copytarget /path/to/mount
 
+After mounting the source URI once, you only need to supply the target and mountpoint. The source URI is stored in the metadata database in the target:
+
+    ./mountload /path/to/copytarget /path/to/mount
+    
 notes
 =====
 
 At the moment, mountload is in a severe alpha state and as such knows many limitations and quirks:
 
 - Downloading data will only happen on read() requests; background downloading is planned
-- SFTP access will only succeed if you use SSH authentication keys (id\_rsa and authorized\_keys)
-- SFTP network throughput has not been optimized; expect horrible speeds
-- It will not tell you if all files have been downloaded
+- SFTP network throughput has not been optimized as much as it could be
+- It will not notify you when all files have been downloaded
 - The source is expected to be read-only
 - Access through FUSE is single threaded
 - It will probably burn down your house and steal your car
