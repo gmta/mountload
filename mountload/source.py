@@ -60,7 +60,5 @@ class MountLoadSource:
             self.lofPath = path
 
         # Perform prefetched reads
-        datalist = []
-        for datachunk in self.lofFP.readv([(offset, size)]):
-            datalist.append(datachunk)
-        return ''.join(datalist)
+        datachunks = self.lofFP.readv([(offset, size)])
+        return ''.join(datachunks)
