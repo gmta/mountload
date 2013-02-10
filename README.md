@@ -21,7 +21,7 @@ To mount a remote directory:
 After mounting the source URI once, you only need to supply the target and mountpoint. The source URI is stored in the metadata database in the target:
 
     ./mountload /path/to/copytarget /path/to/mount
-    
+
 notes
 =====
 
@@ -33,3 +33,8 @@ At the moment, mountload is in a severe alpha state and as such knows many limit
 - The source is expected to be read-only
 - Access through FUSE is single threaded
 - It will probably burn down your house and steal your car
+
+license
+=======
+
+Mountload is released under MIT license. See license.txt for details.

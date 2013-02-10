@@ -1,9 +1,10 @@
 #!/usr/bin/env python
+# Copyright (c) 2013 Jelle Raaijmakers <jelle@gmta.nl>
+# See the file license.txt for copying permission.
 
 import logging
 import os.path
 import stat
-
 from argparse import ArgumentParser
 from errno import ENOENT
 from fuse import FUSE, FuseOSError, Operations, LoggingMixIn
