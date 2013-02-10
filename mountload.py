@@ -18,7 +18,7 @@ class MountLoad(LoggingMixIn, Operations):
         self.gid = getgid()
         self.uid = getuid()
 
-        # Initialise target and metadata
+        # Initialize target and metadata
         self.target = MountLoadTarget(targetDirectory)
         self.metadata = MountLoadMetaData(self.target.getDBPath())
 
@@ -31,7 +31,7 @@ class MountLoad(LoggingMixIn, Operations):
         elif knownSourceURI != sourceURI:
             raise RuntimeError('Given source URI differs from known source URI')
 
-        # Initialise source
+        # Initialize source
         self.source = MountLoadSource(sourceURI, askPassword)
 
         # Bootstrap the remote root
@@ -114,8 +114,8 @@ class MountLoad(LoggingMixIn, Operations):
 
         # Compose a stat structure; fake some fields because SFTP gives us limited info:
         # 1. We fake st_blocks, assuming FS block size of 4 KiB and stat block size of 512 bytes:
-        #    * Calculate number of 4 KiB blocks, ceiling using integer division
-        #    * Multiply times 8 (4 KiB / 512 bytes) to obtain the number of blocks
+        #    * Calculate number of 4 KiB blocks, ceil() using integer division
+        #    * Multiply by 8 (4 KiB / 512 bytes) to obtain the number of blocks
         # 2. We fake st_nlink for directories (2) and files (1)
         stat = {'st_size': pathInfo['size'], 'st_mode': pathInfo['mode'], 'st_atime': pathInfo['atime'],
                 'st_mtime': pathInfo['mtime'], 'st_uid': self.uid, 'st_gid': self.gid}

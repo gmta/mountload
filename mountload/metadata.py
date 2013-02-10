@@ -7,7 +7,7 @@ class MountLoadMetaData:
     metaDataVersion = 1
 
     def __init__(self, dbpath):
-        self.conn = sqlite3.connect(database=dbpath, check_same_thread=False, isolation_level=None)
+        self.conn = sqlite3.connect(database=dbpath, isolation_level=None)
         self.conn.row_factory = sqlite3.Row
         self.transactionDepth = 0
 
@@ -50,15 +50,14 @@ class MountLoadMetaData:
             self.conn.execute('COMMIT')
 
     def _createEmptyDB(self):
+        # Create tables
         c = self.conn.cursor()
-
-        # Tables
         c.execute('CREATE TABLE config (name TEXT PRIMARY KEY, value TEXT)')
         c.execute('CREATE TABLE path (pathId INTEGER PRIMARY KEY, dirname TEXT, basename TEXT, type TEXT, size INTEGER, mode INTEGER, atime INTEGER, mtime INTEGER, isSynced INTEGER, UNIQUE (dirname, basename))')
         c.execute('CREATE TABLE remoteSegment (remoteSegmentId INTEGER PRIMARY KEY, path INTEGER, begin INTEGER, end INTEGER, FOREIGN KEY (path) REFERENCES path (pathId))')
         c.execute('CREATE INDEX remoteSegment_path_idx ON remoteSegment (path)')
 
-        # Configuration
+        # Register current scheme version
         self.setConfig('version', MountLoadMetaData.metaDataVersion)
 
     def getConfigInteger(self, name):
