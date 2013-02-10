@@ -15,6 +15,9 @@ class MountLoadTarget:
         if not isdir(self.metaDirectory):
             os.mkdir(self.metaDirectory)
 
+    def close(self):
+        pass
+
     def createDirectory(self, path, mode):
         dirpath = self._normalizePath(path)
         if isdir(dirpath):

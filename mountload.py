@@ -41,8 +41,9 @@ class MountLoad(LoggingMixIn, Operations):
         self.metadata.commit()
 
     def close(self):
-        self.metadata.close()
         self.source.close()
+        self.metadata.close()
+        self.target.close()
 
     def _downloadFileData(self, pathInfo, offset, size):
         # Read data from source
@@ -112,13 +113,17 @@ class MountLoad(LoggingMixIn, Operations):
             return None
 
         # Compose a stat structure; fake some fields because SFTP gives us limited info:
-        # 1. We fake st_nlink for directories (always 2)
-        # 2. We fake st_blocks for files at always the next multiple of 512
-        stat = {'st_size': pathInfo['size'], 'st_mode': pathInfo['mode'], 'st_atime': pathInfo['atime'], 'st_mtime': pathInfo['mtime'], 'st_uid': self.uid, 'st_gid': self.gid}
+        # 1. We fake st_blocks, assuming FS block size of 4 KiB and stat block size of 512 bytes:
+        #    * Calculate number of 4 KiB blocks, ceiling using integer division
+        #    * Multiply times 8 (4 KiB / 512 bytes) to obtain the number of blocks
+        # 2. We fake st_nlink for directories (2) and files (1)
+        stat = {'st_size': pathInfo['size'], 'st_mode': pathInfo['mode'], 'st_atime': pathInfo['atime'],
+                'st_mtime': pathInfo['mtime'], 'st_uid': self.uid, 'st_gid': self.gid}
+        stat['st_blocks'] = (pathInfo['size'] + 4095) // 4096 * 8
         if pathInfo['type'] == 'directory':
             stat['st_nlink'] = 2
         elif pathInfo['type'] == 'file':
-            stat['st_blocks'] = pathInfo['size'] // 512 + 1
+            stat['st_nlink'] = 1
         return stat
 
     def getSymlinkTarget(self, path):
@@ -181,7 +186,7 @@ class MountLoad(LoggingMixIn, Operations):
         elif stat.S_ISLNK(entry.st_mode):
             self._registerPathSymlink(path, entry)
         else:
-            raise RuntimeError('Unsupported path mode: %d' % entry.st_mode)
+            raise RuntimeError('Unsupported path mode %d for path %s' % (entry.st_mode, path))
 
     def _registerPathDirectory(self, path, entry):
         dirname, basename = MountLoad._splitPath(os.path.normpath(path))
