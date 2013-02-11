@@ -9,7 +9,7 @@ import stat
 from target import MountLoadTarget
 
 class Controller:
-    def __init__(self, sourceURI, targetDirectory, askPassword):
+    def __init__(self, sourceURI, targetDirectory, password):
         self.gid = getgid()
         self.uid = getuid()
 
@@ -27,7 +27,7 @@ class Controller:
             raise RuntimeError('Given source URI differs from known source URI')
 
         # Initialize source
-        self.source = MountLoadSource(sourceURI, askPassword)
+        self.source = MountLoadSource(sourceURI, password)
 
         # Bootstrap the remote root
         self.metadata.begin()

@@ -4,6 +4,7 @@
 from argparse import ArgumentParser
 from controller import Controller
 from fuseconnector import FUSEConnector
+from getpass import getpass
 
 class MountLoad:
     @staticmethod
@@ -18,13 +19,17 @@ class MountLoad:
         parser.add_argument('mountpoint', help="Path to the mountpoint")
         args = parser.parse_args()
 
-        # Determine options
-        askPassword = args.password
+        # Determine configuration
         source = args.source
         target = args.target
         mountpoint = args.mountpoint
 
+        # Determine password
+        password = None
+        if args.password:
+            password = getpass('Enter SSH password: ')
+
         # Run mountload
-        controller = Controller(source, target, askPassword)
+        controller = Controller(source, target, password)
         connector = FUSEConnector(controller)
         connector.startFUSE(mountpoint, isDaemonized=False, isMultiThreaded=False)

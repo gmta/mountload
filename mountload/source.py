@@ -2,25 +2,18 @@
 # See the file license.txt for copying permission.
 
 from errno import ENOENT
-from getpass import getpass
 from os.path import normpath
 from paramiko import SSHClient
 from urlparse import urlsplit
 
 class MountLoadSource:
-    def __init__(self, sourceURI, askPassword):
+    def __init__(self, sourceURI, password):
         # Split the source URI into components
         components = urlsplit(sourceURI)
         hostname = components.hostname
         username = 'anonymous' if components.username is None else components.username
         port = 22 if components.port is None else components.port
         remoteDirectory = components.path
-
-        # Determine password
-        if askPassword:
-            password = getpass('SSH password for user "%s" on host "%s:%d": ' % (username, hostname, port))
-        else:
-            password = None
 
         # Normalize path
         remoteDirectory = normpath(remoteDirectory)
