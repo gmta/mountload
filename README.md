@@ -1,7 +1,7 @@
 mountload
 =========
 
-Mountload is a userspace FUSE library for Linux that allows you to mount a remote directory over SFTP, while simultaneously downloading the directory to a second target location. Mountload is written in Python.
+Mountload is a FUSE library for Linux that allows you to mount a remote directory over SFTP, while simultaneously downloading the directory to a second target location. Mountload is written in Python.
 
 You can access the files in the mount directory as you normally would, but as soon as parts of the files have been downloaded mountload will use the target location as a local cache. You should use mountload if you want to immediately access remote files and directories without waiting for them to download first.
 
