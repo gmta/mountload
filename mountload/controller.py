@@ -7,6 +7,7 @@ import os.path
 from source import MountLoadSource
 import stat
 from target import MountLoadTarget
+import threading
 
 class Controller:
     def __init__(self, sourceURI, targetDirectory, password):
@@ -215,3 +216,18 @@ class Controller:
         if dirname != '/':
             dirname += '/'
         return (dirname, basename)
+
+class ControllerPool:
+    """ControllerPool is a controller factory which creates one instance per thread"""
+
+    def __init__(self, sourceURI, targetDirectory, password):
+        self.sourceURI = sourceURI
+        self.targetDirectory = targetDirectory
+        self.password = password
+        self.instances = {}
+
+    def getController(self):
+        threadId = threading.current_thread().ident
+        if not threadId in self.instances:
+            self.instances[threadId] = Controller(self.sourceURI, self.targetDirectory, self.password)
+        return self.instances[threadId]

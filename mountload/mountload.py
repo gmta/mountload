@@ -2,7 +2,7 @@
 # See the file license.txt for copying permission.
 
 from argparse import ArgumentParser
-from controller import Controller
+from controller import ControllerPool
 from fuseconnector import FUSEConnector
 from getpass import getpass
 
@@ -30,6 +30,6 @@ class MountLoad:
             password = getpass('Enter SSH password: ')
 
         # Run mountload
-        controller = Controller(source, target, password)
-        connector = FUSEConnector(controller)
+        controllerPool = ControllerPool(source, target, password)
+        connector = FUSEConnector(controllerPool)
         connector.startFUSE(mountpoint, isDaemonized=False, isMultiThreaded=False)
