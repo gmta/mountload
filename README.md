@@ -31,7 +31,6 @@ At the moment, mountload is in a severe alpha state and as such knows many limit
 - SFTP network throughput has not been optimized as much as it could be
 - It will not notify you when all files have been downloaded
 - The source is expected to be read-only
-- Access through FUSE is single threaded
 - It will probably burn down your house and steal your car
 
 license

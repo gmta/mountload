@@ -7,7 +7,7 @@ class MountLoadMetaData:
     metaDataVersion = 1
 
     def __init__(self, dbpath):
-        self.conn = sqlite3.connect(database=dbpath, isolation_level=None)
+        self.conn = sqlite3.connect(database=dbpath, check_same_thread=False, isolation_level=None)
         self.conn.row_factory = sqlite3.Row
         self.transactionDepth = 0
 

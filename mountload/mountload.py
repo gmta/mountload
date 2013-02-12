@@ -13,6 +13,8 @@ class MountLoad:
 
         # Parse the command line arguments
         parser = ArgumentParser(description='Mountload mounts a remote directory using SFTP while also downloading it to another target directory.')
+        parser.add_argument('--debug', action='store_true', help="Enable debug mode")
+        parser.add_argument('--multithreaded', action='store_true', help="Run FUSE in multithreaded mode")
         parser.add_argument('--password', action='store_true', help="Ask for an SSH password")
         parser.add_argument('source', help="The SFTP source URI, eg: sftp://user@example.org/path/to/remote/dir", nargs='?')
         parser.add_argument('target', help="The directory in which all the files should be stored")
@@ -31,5 +33,5 @@ class MountLoad:
 
         # Run mountload
         controllerPool = ControllerPool(source, target, password)
-        connector = FUSEConnector(controllerPool)
-        connector.startFUSE(mountpoint, isDaemonized=False, isMultiThreaded=False)
+        connector = FUSEConnector(controllerPool, args.debug)
+        connector.startFUSE(mountpoint, isDaemonized=False, isMultiThreaded=args.multithreaded)

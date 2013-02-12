@@ -7,7 +7,7 @@ import os.path
 from source import MountLoadSource
 import stat
 from target import MountLoadTarget
-import threading
+from threading import Condition
 
 class Controller:
     def __init__(self, sourceURI, targetDirectory, password):
@@ -218,16 +218,49 @@ class Controller:
         return (dirname, basename)
 
 class ControllerPool:
-    """ControllerPool is a controller factory which creates one instance per thread"""
+    """ControllerPool is a Controller factory which maintains a pool of Controller instances"""
+    maximumNumberOfInstances = 4
 
     def __init__(self, sourceURI, targetDirectory, password):
-        self.sourceURI = sourceURI
-        self.targetDirectory = targetDirectory
-        self.password = password
-        self.instances = {}
+        self.instanceArguments = {'sourceURI': sourceURI, 'targetDirectory': targetDirectory, 'password': password}
 
-    def getController(self):
-        threadId = threading.current_thread().ident
-        if not threadId in self.instances:
-            self.instances[threadId] = Controller(self.sourceURI, self.targetDirectory, self.password)
-        return self.instances[threadId]
+        # Instance pool
+        self.availableInstances = []
+        self.numberOfInstances = 0
+        self.poolCondition = Condition()
+
+    def acquireController(self):
+        """Acquires a Controller instance instantly or waits while one becomes available"""
+        self.poolCondition.acquire()
+        while not self._isInstanceAvailable():
+            self.poolCondition.wait()
+        controller = self._acquireInstance()
+        self.poolCondition.release()
+        return controller
+
+    def _acquireInstance(self):
+        if len(self.availableInstances) == 0:
+            newInstance = Controller(**self.instanceArguments)
+            self.numberOfInstances += 1
+            return newInstance
+        return self.availableInstances.pop()
+
+    def close(self):
+        self.poolCondition.acquire()
+        while len(self.availableInstances) < self.numberOfInstances:
+            self.poolCondition.wait()
+        for instance in self.availableInstances:
+            instance.close()
+        del self.availableInstances
+        del self.numberOfInstances
+        self.poolCondition.release()
+
+    def _isInstanceAvailable(self):
+        return len(self.availableInstances) > 0 or self.numberOfInstances < ControllerPool.maximumNumberOfInstances
+
+    def releaseController(self, controller):
+        """Returns a Controller instance to the available pool"""
+        self.poolCondition.acquire()
+        self.availableInstances.append(controller)
+        self.poolCondition.notify()
+        self.poolCondition.release()
