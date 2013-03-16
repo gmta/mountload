@@ -7,7 +7,7 @@ import os.path
 from source import MountLoadSource
 import stat
 from target import MountLoadTarget
-from threading import Condition
+from threading import Semaphore
 
 class Controller:
     def __init__(self, sourceURI, targetDirectory, password):
@@ -226,41 +226,21 @@ class ControllerPool:
 
         # Instance pool
         self.availableInstances = []
-        self.numberOfInstances = 0
-        self.poolCondition = Condition()
+        self.semaphore = Semaphore(ControllerPool.maximumNumberOfInstances)
 
     def acquireController(self):
         """Acquires a Controller instance instantly or waits while one becomes available"""
-        self.poolCondition.acquire()
-        while not self._isInstanceAvailable():
-            self.poolCondition.wait()
-        controller = self._acquireInstance()
-        self.poolCondition.release()
-        return controller
-
-    def _acquireInstance(self):
+        self.semaphore.acquire()
         if len(self.availableInstances) == 0:
-            newInstance = Controller(**self.instanceArguments)
-            self.numberOfInstances += 1
-            return newInstance
+            return Controller(**self.instanceArguments)
         return self.availableInstances.pop()
 
     def close(self):
-        self.poolCondition.acquire()
-        while len(self.availableInstances) < self.numberOfInstances:
-            self.poolCondition.wait()
         for instance in self.availableInstances:
             instance.close()
         del self.availableInstances
-        del self.numberOfInstances
-        self.poolCondition.release()
-
-    def _isInstanceAvailable(self):
-        return len(self.availableInstances) > 0 or self.numberOfInstances < ControllerPool.maximumNumberOfInstances
 
     def releaseController(self, controller):
         """Returns a Controller instance to the available pool"""
-        self.poolCondition.acquire()
         self.availableInstances.append(controller)
-        self.poolCondition.notify()
-        self.poolCondition.release()
+        self.semaphore.release()
