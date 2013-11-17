@@ -22,12 +22,10 @@ class Controller:
         knownSourceURI = self.metadata.getConfigString('sourceURI')
         if sourceURI is None:
             sourceURI = knownSourceURI
-        elif knownSourceURI is None:
-            self.metadata.setConfig('sourceURI', sourceURI)
-        elif knownSourceURI != sourceURI:
+        elif knownSourceURI is not None and knownSourceURI != sourceURI:
             raise RuntimeError('Given source URI differs from known source URI')
 
-        # Initialize source
+        # Initialize SFTP source
         self.source = MountLoadSource(sourceURI, password)
 
         # Bootstrap the remote root
@@ -38,6 +36,10 @@ class Controller:
                 raise RuntimeError('Failed to retrieve the remote root directory %s' % self.source.getRemoteDirectory())
             self._registerPath('/', rootEntry)
         self.metadata.commit()
+
+        # Store the source URI in metadata
+        if knownSourceURI is None:
+            self.metadata.setConfig('sourceURI', sourceURI)
 
     def close(self):
         self.source.close()
