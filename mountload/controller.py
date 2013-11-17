@@ -33,7 +33,7 @@ class Controller:
         if self._getPath('/') is None:
             rootEntry = self.source.getEntry('/')
             if rootEntry is None:
-                raise RuntimeError('Failed to retrieve the remote root directory %s' % self.source.getRemoteDirectory())
+                raise RuntimeError('Failed to retrieve the remote root directory %s' % (self.source.getRemoteDirectory() + '/'))
             self._registerPath('/', rootEntry)
         self.metadata.commit()
 

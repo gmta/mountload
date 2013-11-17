@@ -34,7 +34,7 @@ class MountLoadSource:
         self.lofPath = None
 
     def close(self):
-        if self.lofFP:
+        if self.lofFP is not None:
             self.lofFP.close()
         self.sftp.close()
         self.client.close()
@@ -60,7 +60,7 @@ class MountLoadSource:
     def readData(self, path, offset, size):
         # Open the file if not already open
         if self.lofPath != path:
-            if self.lofFP:
+            if self.lofFP is not None:
                 self.lofFP.close()
             self.lofFP = self.sftp.open(self.remoteDirectory + path, 'r')
             self.lofPath = path
