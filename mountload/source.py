@@ -54,6 +54,9 @@ class MountLoadSource:
     def getLinkTarget(self, path):
         return self.sftp.readlink(self.remoteDirectory + path)
 
+    def getRemoteDirectory(self):
+        return self.remoteDirectory
+
     def readData(self, path, offset, size):
         # Open the file if not already open
         if self.lofPath != path:
