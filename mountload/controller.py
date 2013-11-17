@@ -21,6 +21,8 @@ class Controller:
         # Store and check source URI
         knownSourceURI = self.metadata.getConfigString('sourceURI')
         if sourceURI is None:
+            if knownSourceURI is None:
+                raise RuntimeError('No source URI supplied')
             sourceURI = knownSourceURI
         elif knownSourceURI is not None and knownSourceURI != sourceURI:
             raise RuntimeError('Given source URI differs from known source URI')
