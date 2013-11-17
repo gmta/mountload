@@ -18,7 +18,7 @@ class FUSEConnector(LoggingMixIn, Operations):
         self.log.addHandler(sh)
 
     def _callControllerMethod(self, methodName, *args, **kwargs):
-        """Perform a method call on an acquired Controller instance"""
+        """Acquires a Controller instance and performs a method call on it"""
         controller = self.controllerPool.acquireController()
         returnValue = getattr(controller, methodName)(*args, **kwargs)
         self.controllerPool.releaseController(controller)

@@ -31,7 +31,15 @@ class MountLoad:
         if args.password:
             password = getpass('Enter SSH password: ')
 
-        # Run mountload
+        # Initialize a controller pool and acquire a controller to check for any errors
         controllerPool = ControllerPool(source, target, password)
+        try:
+            controller = controllerPool.acquireController()
+        except RuntimeError as e:
+            parser.error('controller error: %s' % str(e))
+        controllerPool.releaseController(controller)
+
+        # Start FUSE; this will keep mountload running until unmount
         connector = FUSEConnector(controllerPool, args.debug)
         connector.startFUSE(mountpoint, isDaemonized=False, isMultiThreaded=args.multithreaded)
+

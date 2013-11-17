@@ -33,7 +33,10 @@ class Controller:
         # Bootstrap the remote root
         self.metadata.begin()
         if self._getPath('/') is None:
-            self._registerPath('/', self.source.getEntry('/'))
+            rootEntry = self.source.getEntry('/')
+            if rootEntry is None:
+                raise RuntimeError('Failed to retrieve the remote root directory')
+            self._registerPath('/', rootEntry)
         self.metadata.commit()
 
     def close(self):
@@ -84,6 +87,7 @@ class Controller:
         return self.metadata.getSubPaths(dirpath)
 
     def _getPath(self, path):
+        """Returns the metadata structure for a given path by recursively resolving the path components."""
         path = os.path.normpath(path)
         dirname, basename = Controller._splitPath(path)
         pathInfo = self.metadata.getPath(dirname, basename)

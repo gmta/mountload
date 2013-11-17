@@ -26,9 +26,8 @@ class MountLoadSource:
         self.client.load_system_host_keys()
         self.client.connect(hostname=hostname, port=port, username=username, password=password, compress=True)
 
-        # Open SFTP over SSH
+        # Open SFTP channel over SSH
         self.sftp = self.client.open_sftp()
-        self.sftp.chdir(self.remoteDirectory)
 
         # Keep track of the last opened file
         self.lofFP = None
