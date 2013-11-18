@@ -34,8 +34,12 @@ class MountLoadSource:
         self.lofPath = None
 
     def close(self):
+        # Do a del so SFTPFile performs an async close; this is necessary because we can't guarantee it's being closed
+        # by the same thread that opened the file. This happens during FUSE destroy() for example.
         if self.lofFP is not None:
-            self.lofFP.close()
+            del self.lofFP
+
+        # Close both SFTPClient and SSHClient; these work fine across threads
         self.sftp.close()
         self.client.close()
 
