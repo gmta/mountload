@@ -1,6 +1,7 @@
 # Copyright (c) 2013 Jelle Raaijmakers <jelle@gmta.nl>
 # See the file license.txt for copying permission.
 
+from contextlib import contextmanager
 from metadata import MountLoadMetaData
 from os import getgid, getuid
 import os.path
@@ -236,19 +237,31 @@ class ControllerPool:
         self.availableInstances = []
         self.semaphore = Semaphore(ControllerPool.maximumNumberOfInstances)
 
-    def acquireController(self):
-        """Acquires a Controller instance instantly or waits while one becomes available"""
+    @contextmanager
+    def acquire(self):
+        """Acquires a controller from the pool or waits while one becomes available"""
         self.semaphore.acquire()
+
+        # Take a controller from the stack or create a new one
         if len(self.availableInstances) == 0:
-            return Controller(**self.instanceArguments)
-        return self.availableInstances.pop()
+            controller = Controller(**self.instanceArguments)
+        else:
+            controller = self.availableInstances.pop()
+
+        # Execute the with block; if anything goes wrong, close the controller and don't
+        # use it again. If nothing strange happened, add it back to our stack. Whatever
+        # happens, we always release our semaphore so another thread can acquire().
+        try:
+            yield controller
+        except:
+            controller.close()
+            raise
+        else:
+            self.availableInstances.append(controller)
+        finally:
+            self.semaphore.release()
 
     def close(self):
         for instance in self.availableInstances:
             instance.close()
         del self.availableInstances
-
-    def releaseController(self, controller):
-        """Returns a Controller instance to the available pool"""
-        self.availableInstances.append(controller)
-        self.semaphore.release()
