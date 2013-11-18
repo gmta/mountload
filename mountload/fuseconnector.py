@@ -32,11 +32,8 @@ class FUSEConnector(LoggingMixIn, Operations):
             return controller.readData(path, offset, size)
 
     def readdir(self, path, fh):
-        entries = ['.', '..']
         with self.pool.acquire() as controller:
-            for entry in controller.getEntriesInDirectory(path):
-                entries.append(entry['basename'])
-        return entries
+            return ['.', '..'] + [entry['basename'] for entry in controller.getEntriesInDirectory(path)]
 
     def readlink(self, path):
         with self.pool.acquire() as controller:
