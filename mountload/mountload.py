@@ -46,5 +46,5 @@ class MountLoad:
 
         # Start FUSE; this will keep mountload running until unmount
         connector = FUSEConnector(controllerPool, args.debug)
-        connector.startFUSE(mountpoint, isDaemonized=False, isMultiThreaded=args.multithreaded)
+        connector.startFUSE(mountpoint, isMultiThreaded=args.multithreaded)
 

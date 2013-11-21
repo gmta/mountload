@@ -39,6 +39,6 @@ class FUSEConnector(LoggingMixIn, Operations):
         with self.pool.acquire() as controller:
             return controller.getSymlinkTarget(path)
 
-    def startFUSE(self, mountpoint, isDaemonized=True, isMultiThreaded=False):
+    def startFUSE(self, mountpoint, isMultiThreaded):
         """Starts FUSE using itself as the connector"""
-        FUSE(self, mountpoint, foreground=not isDaemonized, nothreads=not isMultiThreaded)
+        FUSE(self, mountpoint, foreground=True, nothreads=not isMultiThreaded)
