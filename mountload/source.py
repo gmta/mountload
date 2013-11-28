@@ -3,7 +3,7 @@
 
 from errno import ENOENT
 from os.path import normpath
-from paramiko import SSHClient
+from paramiko import SSHClient, WarningPolicy
 from urlparse import urlsplit
 
 class MountLoadSource:
@@ -24,6 +24,7 @@ class MountLoadSource:
         # Connect using SSH
         self.client = SSHClient()
         self.client.load_system_host_keys()
+        self.client.set_missing_host_key_policy(WarningPolicy())
         self.client.connect(hostname=hostname, port=port, username=username, password=password, compress=True)
 
         # Open SFTP channel over SSH
