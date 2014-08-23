@@ -1,5 +1,5 @@
-# Copyright (c) 2013 Jelle Raaijmakers <jelle@gmta.nl>
-# See the file license.txt for copying permission.
+# Copyright (c) 2014 Jelle Raaijmakers <jelle@gmta.nl>
+# See the file LICENSE.txt for copying permission.
 
 from contextlib import contextmanager
 from mountload.metadata import MountLoadMetaData

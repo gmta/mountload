@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# Copyright (c) 2013 Jelle Raaijmakers <jelle@gmta.nl>
-# See the file license.txt for copying permission.
+# Copyright (c) 2014 Jelle Raaijmakers <jelle@gmta.nl>
+# See the file LICENSE.txt for copying permission.
 
 # Add paths to dependencies
 import sys
