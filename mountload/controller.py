@@ -2,12 +2,12 @@
 # See the file license.txt for copying permission.
 
 from contextlib import contextmanager
-from metadata import MountLoadMetaData
+from mountload.metadata import MountLoadMetaData
+from mountload.source import MountLoadSource
+from mountload.target import MountLoadTarget
 from os import getgid, getuid
 import os.path
-from source import MountLoadSource
 import stat
-from target import MountLoadTarget
 from threading import Semaphore
 
 class Controller:
@@ -155,7 +155,7 @@ class Controller:
         # Unlike read(2) suggests, many applications expect us to return exactly [size] bytes of data.
         # So we need to compile this chunk using local and remote sources, whatever is available, as long
         # as we end up with enough bytes.
-        data = ''
+        data = b''
         remoteSegments = self.metadata.getRemoteSegmentsRange(pathInfo['pathId'], offset, offset + size - 1)
         segmentIdx = 0
         currentPos = 0

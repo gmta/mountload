@@ -2,8 +2,8 @@
 # See the file license.txt for copying permission.
 
 from argparse import ArgumentParser
-from controller import ControllerPool
-from fuseconnector import FUSEConnector
+from mountload.controller import ControllerPool
+from mountload.fuseconnector import FUSEConnector
 from getpass import getpass
 
 class MountLoad:

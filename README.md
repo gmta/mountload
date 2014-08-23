@@ -14,11 +14,11 @@ requirements
 ============
 
 - fuse 2.9.0+
-- python 2.7.3+
-- python-paramiko 1.7.7+
+- python 3+
 
 examples
 ========
+
 To mount a remote directory:
 
     ./mountload.py sftp://user@example.org/path/to/remote/directory /path/to/copytarget /path/to/mount
@@ -51,3 +51,4 @@ Mountload is released under MIT license. See license.txt for details.
 [FUSE]: http://fuse.sourceforge.net/
 [fusepy]: https://github.com/terencehonles/fusepy
 [paramiko]: https://github.com/paramiko/paramiko
+

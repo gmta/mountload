@@ -17,7 +17,7 @@ from __future__ import division
 
 from ctypes import *
 from ctypes.util import find_library
-from errno import *
+from errno import EFAULT, EIO, ENOENT, ERANGE, EROFS
 from os import strerror
 from platform import machine, system
 from signal import signal, SIGINT, SIG_DFL
@@ -41,11 +41,6 @@ except ImportError:
         newfunc.keywords = keywords
         return newfunc
 
-try:
-    basestring
-except NameError:
-    basestring = str
-
 class c_timespec(Structure):
     _fields_ = [('tv_sec', c_long), ('tv_nsec', c_long)]
 
@@ -53,13 +48,13 @@ class c_utimbuf(Structure):
     _fields_ = [('actime', c_timespec), ('modtime', c_timespec)]
 
 class c_stat(Structure):
-    pass    # Platform dependent
+    pass  # Platform dependent
 
 _system = system()
 _machine = machine()
 
 if _system == 'Darwin':
-    _libiconv = CDLL(find_library('iconv'), RTLD_GLOBAL) # libfuse dependency
+    _libiconv = CDLL(find_library('iconv'), RTLD_GLOBAL)  # libfuse dependency
     _libfuse_path = (find_library('fuse4x') or find_library('osxfuse') or
                      find_library('fuse'))
 else:
@@ -253,7 +248,7 @@ class fuse_operations(Structure):
     _fields_ = [
         ('getattr', CFUNCTYPE(c_int, c_char_p, POINTER(c_stat))),
         ('readlink', CFUNCTYPE(c_int, c_char_p, POINTER(c_byte), c_size_t)),
-        ('getdir', c_voidp),    # Deprecated, use readdir
+        ('getdir', c_voidp),  # Deprecated, use readdir
         ('mknod', CFUNCTYPE(c_int, c_char_p, c_mode_t, c_dev_t)),
         ('mkdir', CFUNCTYPE(c_int, c_char_p, c_mode_t)),
         ('unlink', CFUNCTYPE(c_int, c_char_p)),
@@ -264,7 +259,7 @@ class fuse_operations(Structure):
         ('chmod', CFUNCTYPE(c_int, c_char_p, c_mode_t)),
         ('chown', CFUNCTYPE(c_int, c_char_p, c_uid_t, c_gid_t)),
         ('truncate', CFUNCTYPE(c_int, c_char_p, c_off_t)),
-        ('utime', c_voidp),     # Deprecated, use utimens
+        ('utime', c_voidp),  # Deprecated, use utimens
         ('open', CFUNCTYPE(c_int, c_char_p, POINTER(fuse_file_info))),
 
         ('read', CFUNCTYPE(c_int, c_char_p, POINTER(c_byte), c_size_t,
@@ -400,7 +395,7 @@ class FUSE(object):
         except ValueError:
             pass
 
-        del self.operations     # Invoke the destructor
+        del self.operations  # Invoke the destructor
         if err:
             raise RuntimeError(err)
 
@@ -418,7 +413,7 @@ class FUSE(object):
 
         try:
             return func(*args, **kwargs) or 0
-        except OSError, e:
+        except OSError as e:
             return -(e.errno or EFAULT)
         except:
             print_exc()
@@ -492,9 +487,9 @@ class FUSE(object):
 
     def read(self, path, buf, size, offset, fip):
         if self.raw_fi:
-          fh = fip.contents
+            fh = fip.contents
         else:
-          fh = fip.contents.fh
+            fh = fip.contents.fh
 
         ret = self.operations('read', path.decode(self.encoding), size,
                                       offset, fh)
@@ -505,7 +500,7 @@ class FUSE(object):
         assert retsize <= size, \
             'actual amount read %d greater than expected %d' % (retsize, size)
 
-        data = create_string_buffer(ret, retsize)
+        create_string_buffer(ret, retsize)
         memmove(buf, ret, retsize)
         return retsize
 
@@ -539,9 +534,9 @@ class FUSE(object):
 
     def release(self, path, fip):
         if self.raw_fi:
-          fh = fip.contents
+            fh = fip.contents
         else:
-          fh = fip.contents.fh
+            fh = fip.contents.fh
 
         return self.operations('release', path.decode(self.encoding), fh)
 
@@ -570,7 +565,7 @@ class FUSE(object):
         # do not truncate
         if retsize > size: return -ERANGE
 
-        buf = create_string_buffer(ret, retsize)    # Does not add trailing 0
+        buf = create_string_buffer(ret, retsize)  # Does not add trailing 0
         memmove(value, buf, retsize)
 
         return retsize
@@ -607,7 +602,7 @@ class FUSE(object):
         for item in self.operations('readdir', path.decode(self.encoding),
                                                fip.contents.fh):
 
-            if isinstance(item, basestring):
+            if isinstance(item, str):
                 name, st, offset = item, None, 0
             else:
                 name, attrs, offset = item
@@ -764,7 +759,7 @@ class Operations(object):
 
         if path != '/':
             raise FuseOSError(ENOENT)
-        return dict(st_mode=(S_IFDIR | 0755), st_nlink=2)
+        return dict(st_mode=(S_IFDIR | 0o755), st_nlink=2)
 
     def getxattr(self, path, name, position=0):
         raise FuseOSError(ENOTSUP)
@@ -886,7 +881,7 @@ class LoggingMixIn:
         try:
             ret = getattr(self, op)(path, *args)
             return ret
-        except OSError, e:
+        except OSError as e:
             ret = str(e)
             raise
         finally:

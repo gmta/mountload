@@ -4,7 +4,7 @@
 from errno import ENOENT
 from os.path import normpath
 from paramiko import SSHClient, WarningPolicy
-from urlparse import urlsplit
+from urllib.parse import urlsplit
 
 class MountLoadSource:
     def __init__(self, sourceURI, password):
@@ -72,4 +72,4 @@ class MountLoadSource:
 
         # Perform prefetched reads
         datachunks = self.lofFP.readv([(offset, size)])
-        return ''.join(datachunks)
+        return b''.join(datachunks)
